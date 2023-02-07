@@ -42,14 +42,14 @@ logger.addHandler(handler)
 
 
 def check_tokens():
-    '''Проверяем, что есть все токены.'''
+    """Проверяем, что есть все токены."""
 
     logger.debug('Проверяем, что есть все токены.')
     return all((PRACTICUM_TOKEN, TELEGRAM_TOKEN, TELEGRAM_CHAT_ID))
 
 
 def send_message(bot, message):
-    '''Отправка сообщения в телеграмм.'''
+    """Отправка сообщения в телеграмм."""
 
     try:
         logger.debug(f'Успешная отправка сообщения в телеграмм: {message}.')
@@ -60,7 +60,7 @@ def send_message(bot, message):
 
 
 def get_api_answer(timestamp):
-    '''Запрос к эндпоинту API-сервиса.'''
+    """Запрос к эндпоинту API-сервиса."""
 
     logger.info('Запрос к эндпоинту API-сервиса.')
     timestamp = timestamp or int(time.time())
@@ -78,9 +78,8 @@ def get_api_answer(timestamp):
 
 
 def check_response(response):
-    '''
-    Проверяем ответ API на соответствие документации.
-    '''
+    """Проверяем ответ API на соответствие документации."""
+
     logger.info('Проверяем ответ API на соответствие документации.')
 
     if type(response) is not dict:
@@ -110,9 +109,8 @@ def check_response(response):
 
 
 def parse_status(homework):
-    '''
-    Извлекаем информацию о домашней работе.
-    '''
+    """Извлекаем информацию о домашней работе."""
+
     logger.debug('Извлекаем информацию о домашней работе.')
 
     if 'homework_name' not in homework:
@@ -147,7 +145,7 @@ def parse_status(homework):
 
 
 def main():
-    '''Основная логика работы бота.'''
+    """Основная логика работы бота."""
 
     if not check_tokens():
         logger.critical('Отсутствуют одна или несколько переменных окружения.')
@@ -175,7 +173,7 @@ def main():
             message = f'Сбой в работе программы: {error}'
             logger.critical(
                 f'Уведомление об ошибке отправлено в чат {message}'
-                )
+            )
         send_message(bot, message)
         time.sleep(RETRY_PERIOD)
 
