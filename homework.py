@@ -193,7 +193,7 @@ def main():
             logger.error(error)
             message = f'Сбой в работе программы: {error}'
             logger.critical(
-                    f'Уведомление об ошибке отправлено в чат {message}'
+                f'Уведомление об ошибке отправлено в чат {message}'
             )
             if str(error) != last_message_error:
                 last_message_error = str(error)
