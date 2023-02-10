@@ -18,11 +18,7 @@ class NoKeyInDict(Exception):
     pass
 
 
-class HomeworksNotInResponse(Exception):
-    pass
-
-
-class HomeworkListNotList(Exception):
+class KeysNotInResponse(Exception):
     pass
 
 
@@ -30,5 +26,5 @@ class EmptyResponse(Exception):
     pass
 
 
-class ResponseIsNotDict(Exception):
+class JsonNotDecode(Exception):
     pass

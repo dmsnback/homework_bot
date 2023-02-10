@@ -1,13 +1,12 @@
+from http import HTTPStatus
+import json
 import logging
 import os
 import time
 
-import requests
-
 from dotenv import load_dotenv
-
+import requests
 import telegram
-from http import HTTPStatus
 
 import exceptions
 
@@ -70,7 +69,11 @@ def get_api_answer(timestamp):
         raise exceptions.URLNotAvailable('URL недоступен.')
     if response.status_code != HTTPStatus.OK:
         logger.error('Код ответа от сервера не 200.')
-        raise exceptions.StatusCode('Код ответа от сервера не 200ю')
+        raise exceptions.StatusCode('Код ответа от сервера не 200.')
+    try:
+        response.json()
+    except json.decoder.JSONDecodeError:
+        raise exceptions.JsonNotDecode('Ответ не преобразуется в json ')
     return response.json()
 
 
@@ -92,7 +95,21 @@ def check_response(response):
 
     if 'homeworks' not in response:
         logger.error('Нет ключа "homeworks"')
-        raise exceptions.HomeworksNotInResponse('Нет ключа "homeworks"')
+        raise exceptions.KeysNotInResponse('Нет ключа "homeworks"')
+
+    if not response['homeworks']:
+        logger.error('Нет значения по ключу "homeworks"')
+        raise exceptions.KeysNotInResponse('Нет значения по ключу "homeworks"')
+
+    if 'current_date' not in response:
+        logger.error('Нет ключа "current_date"')
+        raise exceptions.KeysNotInResponse('Нет ключа "current_date"')
+
+    if not response['current_date']:
+        logger.error('Нет значения по ключу "current_date"')
+        raise exceptions.KeysNotInResponse(
+            'Нет значения по ключу "current_date"'
+        )
 
     homework = response['homeworks']
 
@@ -101,6 +118,7 @@ def check_response(response):
         raise TypeError(
             'Данные приходят не в виде списка.'
         )
+
     return homework
 
 
@@ -117,7 +135,7 @@ def parse_status(homework):
         raise KeyError('Нет значения по ключу "homework_name"')
 
     if 'status' not in homework:
-        logger.error('нет ключа "status"')
+        logger.error('Нет ключа "status"')
         raise KeyError('нет ключа "status"')
 
     if not homework['status']:
@@ -134,9 +152,9 @@ def parse_status(homework):
         raise exceptions.NoKeyInDict('Нет статуса в HOMEWORK_VERDICTS')
 
     logger.info(
-        f'Изменился статус проверки работы "{homework_name}". {verdict}'
+        f'Изменился статус проверки работы "{homework_name}". \n{verdict}'
     )
-    return f'Изменился статус проверки работы "{homework_name}". {verdict}'
+    return f'Изменился статус проверки работы "{homework_name}". \n{verdict}'
 
 
 def main():
@@ -147,29 +165,42 @@ def main():
 
     bot = telegram.Bot(token=TELEGRAM_TOKEN)
     current_timestamp = int(time.time())
+    last_message = ''
+    last_message_error = ''
 
     while True:
         try:
             response = get_api_answer(current_timestamp)
-            homework_list = check_response(response)
+            homework = check_response(response)
             try:
-                homework = homework_list[0]
+                message = parse_status(homework[0])
+
+                if message != last_message:
+                    send_message(bot, message)
+                    last_message = message
+                else:
+                    logger.debug(
+                        'Статус проверки домашней работы не изменился.'
+                    )
+
             except IndexError:
-                logger.critical('Нет новых заданий на проверке.')
-                raise exceptions.NoNewHomework(
-                    'Нет новых заданий на проверке.'
-                )
-            homework = homework_list[0]
-            message = parse_status(homework)
+                logger.critical('Нет новых работ на проверке.')
+                raise exceptions.NoNewHomework('Нет новых работ на проверке.')
+
             current_timestamp = response.get('current_date')
 
         except Exception as error:
+            logger.error(error)
             message = f'Сбой в работе программы: {error}'
             logger.critical(
-                f'Уведомление об ошибке отправлено в чат {message}'
+                    f'Уведомление об ошибке отправлено в чат {message}'
             )
-        send_message(bot, message)
-        time.sleep(RETRY_PERIOD)
+            if str(error) != last_message_error:
+                last_message_error = str(error)
+                send_message(bot, message)
+
+        finally:
+            time.sleep(RETRY_PERIOD)
 
 
 if __name__ == '__main__':
