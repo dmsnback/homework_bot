@@ -12,7 +12,7 @@
 ### Запуск проекта
 - клонировать репозиторий, перейти в директорию проекта
 ```
-git clone dmsnback/homework_bot.git
+git clone git@github.com:dmsnback/homework_bot.git
 cd homework_bot
 ```
 - Установите и активируйте виртуальное окружение
