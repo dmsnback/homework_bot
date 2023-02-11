@@ -71,10 +71,10 @@ def get_api_answer(timestamp):
         logger.error('Код ответа от сервера не 200.')
         raise exceptions.StatusCode('Код ответа от сервера не 200.')
     try:
-        response.json()
+        response = response.json()
     except json.decoder.JSONDecodeError:
         raise exceptions.JsonNotDecode('Ответ не преобразуется в json ')
-    return response.json()
+    return response
 
 
 def check_response(response):
